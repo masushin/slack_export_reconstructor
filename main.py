@@ -6,6 +6,7 @@ from pathlib import Path
 from slack_export_data import SlackExportData
 import tempfile
 import shutil
+import re
 
 
 class SlackExportDataReconstructor:
@@ -119,6 +120,65 @@ class SlackExportDataReconstructor:
                         message['files'] = fileinfos
         print('Complete : replaceing export data..\n\n')
 
+    def replaceUserName(self):
+        print('Replaceing user name..')
+        for channel in self.export_data.channelDirectories:
+            print('Channel : {} ..'.format(channel.path.parts[-1]))
+            for message_file in channel.messages:
+                for message in message_file.json:
+                    if('attachments' in message):
+                        for attachment in message['attachments']:
+                            if ('text' in attachment):
+                                text = str(attachment['text'])
+                                results = re.findall(
+                                    r"\<@[0-9,A-Z]{9,11}\>", text)
+                                for result in results:
+                                    userinfo = self.export_data.users.getUserByID(
+                                        result[2:-1])
+                                    if userinfo is not None:
+                                        if 'real_name' in userinfo:
+                                            text = text.replace(
+                                                result, " *@{}* ".format(userinfo['real_name']))
+                                        else:
+                                            text = text.replace(
+                                                result, " *@{}* ".format(userinfo['name']))
+                                if len(results) >= 1:
+                                    attachment['text'] = text
+
+                    if('root' in message):
+                        if ('text' in message['root']):
+                            text = str(message['root']['text'])
+                            results = re.findall(r"\<@[0-9,A-Z]{9,11}\>", text)
+                            for result in results:
+                                userinfo = self.export_data.users.getUserByID(
+                                    result[2:-1])
+                                if userinfo is not None:
+                                    if 'real_name' in userinfo:
+                                        text = text.replace(
+                                            result, " *@{}* ".format(userinfo['real_name']))
+                                    else:
+                                        text = text.replace(
+                                            result, " *@{}* ".format(userinfo['name']))
+                            if len(results) >= 1:
+                                message['root']['text'] = text
+
+                    if ('text' in message):
+                        text = str(message['text'])
+                        results = re.findall(r"\<@[0-9,A-Z]{9,11}\>", text)
+                        for result in results:
+                            userinfo = self.export_data.users.getUserByID(
+                                result[2:-1])
+                            if userinfo is not None:
+                                if 'real_name' in userinfo:
+                                    text = text.replace(
+                                        result, " *@{}* ".format(userinfo['real_name']))
+                                else:
+                                    text = text.replace(
+                                        result, " *@{}* ".format(userinfo['name']))
+                        if len(results) >= 1:
+                            message['text'] = text
+        print('Complete : replaceing user name..\n\n')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -126,11 +186,15 @@ if __name__ == "__main__":
     parser.add_argument('output')
     parser.add_argument('--replace', action="store_true")
     parser.add_argument('--reconstruct', action="store_true")
+    parser.add_argument('--username', action="store_true")
 
     args = parser.parse_args()
     reconstructor = SlackExportDataReconstructor(args.config)
     reconstructor.export_data.printFileStructure()
     reconstructor.export_data.getNumberOfMessage()
+
+    if (args.username):
+        reconstructor.replaceUserName()
 
     if (args.reconstruct):
         reconstructor.reconstructFileInfo()

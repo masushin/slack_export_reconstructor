@@ -4,19 +4,22 @@ from pathlib import Path
 import shutil
 import tempfile
 
+
 class SlackExportData:
-    def __init__(self, dir_path:str) -> None:
+    def __init__(self, dir_path: str) -> None:
         export_data_path = Path(dir_path)
         if not export_data_path.is_dir:
             raise ValueError
         self.path = Path(dir_path)
         self.channels = SlackJSONDataChannel(self.path/'channels.json')
-        self.integration_logs = SlackJSONDataIntegrationLogs(self.path/'integration_logs.json')
+        self.integration_logs = SlackJSONDataIntegrationLogs(
+            self.path/'integration_logs.json')
         self.users = SlackJSONDataUsers(self.path/'users.json')
         self.channelDirectories = []
 
         for channel in self.channels:
-            self.channelDirectories.append(SlackChannelDirectory(self.path/channel['name']))
+            self.channelDirectories.append(
+                SlackChannelDirectory(self.path/channel['name']))
 
     def getMessagesByClientMsgId(self, id):
         for channel in self.channelDirectories:
@@ -66,16 +69,16 @@ class SlackExportData:
             ch_message_num = 0
             for message in channelDirectory.messages:
                 ch_message_num += len(message.json)
-            print('[{}] {}'.format(channelDirectory.channelDirName, ch_message_num))
+            print('[{}] {}'.format(
+                channelDirectory.channelDirName, ch_message_num))
             message_num += ch_message_num
         print('---\nTotal : {}'.format(message_num))
         return message_num
 
 
-
 class SlackJSONData:
-    def __init__(self, path:str) -> None:
-        self.filepath  = Path(path).resolve()
+    def __init__(self, path: str) -> None:
+        self.filepath = Path(path).resolve()
         self.filename = self.filepath.name
         with open(self.filepath) as f:
             self.json = json.load(f)
@@ -91,22 +94,30 @@ class SlackJSONData:
         with open(outputPath/self.filename, 'w') as f:
             json.dump(self.json, f, indent=4, ensure_ascii=False)
 
+
 class SlackJSONDataChannel(SlackJSONData):
-    def __init__(self, path:str) -> None:
+    def __init__(self, path: str) -> None:
         super().__init__(path)
 
 
 class SlackJSONDataIntegrationLogs(SlackJSONData):
-    def __init__(self, path:str) -> None:
+    def __init__(self, path: str) -> None:
         super().__init__(path)
 
+
 class SlackJSONDataUsers(SlackJSONData):
-    def __init__(self, path:str) -> None:
+    def __init__(self, path: str) -> None:
         super().__init__(path)
+
+    def getUserByID(self, id):
+        for user in self.json:
+            if (user['id'] == id):
+                return user
+        return None
 
 
 class SlackChannelDirectory:
-    def __init__(self, path:str) -> None:
+    def __init__(self, path: str) -> None:
         self.path = Path(path)
         self.channelDirName = self.path.parts[-1]
         self.messages = []
@@ -114,6 +125,7 @@ class SlackChannelDirectory:
         for file in json_files:
             self.messages.append(SlackJSONMessage(file))
 
+
 class SlackJSONMessage(SlackJSONData):
-    def __init__(self, path:str) -> None:
+    def __init__(self, path: str) -> None:
         super().__init__(path)
