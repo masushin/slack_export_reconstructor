@@ -56,12 +56,11 @@ class SlackExportDataReconstructor:
                                         file['id'])
                                     if (hostedFile is not None):
                                         fileinfos.append(hostedFile)
-                            message['root']['text'] += "\n---\n```\n添付ファイル\n"
+                            message['root']['text'] += "\n---\n添付ファイル\n"
                             for fileinfo in fileinfos:
                                 url = str(fileinfo['url_private']).replace(
                                     '\\', '').split('?')[0]
-                                message['root']['text'] += "{}\n".format(url)
-                            message['root']['text'] += "```"
+                                message['root']['text'] += "<{}|{}>\n".format(url,url)
                             del message['root']['files']
 
                             if ('upload' in message['root']):
@@ -76,12 +75,11 @@ class SlackExportDataReconstructor:
                                 hostedFile = self.getHostedFileInfo(file['id'])
                                 if (hostedFile is not None):
                                     fileinfos.append(hostedFile)
-                        message['text'] += "\n---\n```\n添付ファイル\n"
+                        message['text'] += "\n---\n添付ファイル\n"
                         for fileinfo in fileinfos:
                             url = str(fileinfo['url_private']).replace(
                                 '\\', '').split('?')[0]
-                            message['text'] += "{}\n".format(url)
-                        message['text'] += "```"
+                            message['text'] += "<{}|{}>\n".format(url,url)
                         del message['files']
 
                         if ('upload' in message):
