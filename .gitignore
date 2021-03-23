@@ -2,4 +2,9 @@
 *.zip
 *.json
 *.ini
-__pycache__/slack_export_data.cpython-37.pyc
+__pycache__/
+exportdata_*/
+reference*/
+venv*/
+*.config
+.vscode/
